@@ -8,61 +8,77 @@ import json
 from linebot.v3.messaging import MessagingApi, Configuration, ApiClient, PushMessageRequest
 from linebot.v3.messaging.models import TextMessage
 import re
+from dotenv import load_dotenv
 
 DATA_FILE = 'daily_open_interest.json'
-user_lin = "U2e7ddaa0d777d91a3496d7336da8edec"
 
 def send_line_message(message_text):
-    access_token = os.environ.get("LINE_TOKEN")
-    line_user_id = os.environ.get("USER_ID")
+    try:
+        access_token = os.environ.get("LINE_TOKEN")
+        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2")]
+        if not access_token:
+            print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
+        configuration = Configuration(access_token=access_token)
+        with ApiClient(configuration) as api_client:
+            messaging_api = MessagingApi(api_client)
+            for id in line_user_id:
+                if id:
+                    messaging_api.push_message(
+                        PushMessageRequest(
+                            to=id,
+                            messages=[TextMessage(text=message_text)]
+                        )
+                    )
+    except Exception as e:
+        print(f"[錯誤] 發送 LINE 訊息失敗：{e}")
+        return None
 
-    configuration = Configuration(access_token=access_token)
-    with ApiClient(configuration) as api_client:
-        messaging_api = MessagingApi(api_client)
-        messaging_api.push_message(
-            PushMessageRequest(
-                to=line_user_id,
-                messages=[TextMessage(text=message_text)]
-            )
-        )
 
 def fetch_taiex_futures_data(query_date):
-    url = "https://www.taifex.com.tw/cht/3/futContractsDate"
-    http = urllib3.PoolManager()
-    response = http.request(
-        'POST',
-        url,
-        fields={
-            'queryType': 1,
-            'doQuery': 1,
-            'queryDate': query_date
-        }
-    )
-    soup = BeautifulSoup(response.data, 'html.parser')
-    table_html = soup.find_all('table')
-    data_frame = pd.read_html(StringIO(str(table_html)))[0]
-    foreign_total_open_interest = int(data_frame.iloc[71, 13])
-    taiex_open_interest = int(data_frame.iloc[2, 13])
-    return taiex_open_interest, foreign_total_open_interest
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futContractsDate"
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            url,
+            fields={
+                'queryType': 1,
+                'doQuery': 1,
+                'queryDate': query_date
+            }
+        )
+        soup = BeautifulSoup(response.data, 'html.parser')
+        table_html = soup.find_all('table')
+        data_frame = pd.read_html(StringIO(str(table_html)))[0]
+        foreign_total_open_interest = int(data_frame.iloc[71, 13])
+        taiex_open_interest = int(data_frame.iloc[2, 13])
+        return taiex_open_interest, foreign_total_open_interest
+    except Exception as e:
+        print(f"[錯誤] 抓取資料失敗：{e}")
+        return None
 
 def fetch_option_data(query_date):
-    url = "https://www.taifex.com.tw/cht/3/optContractsDate"
-    http = urllib3.PoolManager()
-    response = http.request(
-        'POST',
-        url,
-        fields={
-            'queryType': 1,
-            'doQuery': 1,
-            'queryDate': query_date
-        }
-    )
-    soup = BeautifulSoup(response.data, 'html.parser')
-    table_html = soup.find_all('table')
-    data_frame = pd.read_html(StringIO(str(table_html)))[0]
-    foreign_total_option_open_interest = int(data_frame.iloc[17, 13])
-    option_open_interest = int(data_frame.iloc[2, 13])
-    return option_open_interest, foreign_total_option_open_interest
+    try:
+        url = "https://www.taifex.com.tw/cht/3/optContractsDate"
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            url,
+            fields={
+                'queryType': 1,
+                'doQuery': 1,
+                'queryDate': query_date
+            }
+        )
+        soup = BeautifulSoup(response.data, 'html.parser')
+        table_html = soup.find_all('table')
+        data_frame = pd.read_html(StringIO(str(table_html)))[0]
+        foreign_total_option_open_interest = int(data_frame.iloc[17, 13])
+        option_open_interest = int(data_frame.iloc[2, 13])
+        return option_open_interest, foreign_total_option_open_interest
+    except Exception as e:
+        print(f"[錯誤] 抓取資料失敗：{e}")
+        return None
 
 def clean_data_to_int(data):
     data_clean = re.sub(r"\s*\(.*?\)", "", data)
@@ -70,32 +86,43 @@ def clean_data_to_int(data):
     return int(data_clean)
 
 def fetch_large_future_data(query_date):
-    url = "https://www.taifex.com.tw/cht/3/largeTraderFutQry"
-    http = urllib3.PoolManager()
-    response = http.request(
-        'POST',
-        url,
-        fields={
-            'contractId': 'TX',
-            'queryDate': query_date
-        }
-    )
-    soup = BeautifulSoup(response.data, 'html.parser')
-    table_html = soup.find_all('table')
-    data_frame = pd.read_html(StringIO(str(table_html)))[0]
-    large_open_interest = clean_data_to_int(data_frame.iloc[1, 2]) - clean_data_to_int(data_frame.iloc[1, 6])
-    large_total_open_interest = clean_data_to_int(data_frame.iloc[1, 4]) - clean_data_to_int(data_frame.iloc[1, 8])
-    return large_open_interest, large_total_open_interest
+    try:
+        url = "https://www.taifex.com.tw/cht/3/largeTraderFutQry"
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            url,
+            fields={
+                'contractId': 'TX',
+                'queryDate': query_date
+            }
+        )
+        soup = BeautifulSoup(response.data, 'html.parser')
+        table_html = soup.find_all('table')
+        data_frame = pd.read_html(StringIO(str(table_html)))[0]
+        large_open_interest = clean_data_to_int(data_frame.iloc[1, 2]) - clean_data_to_int(data_frame.iloc[1, 6])
+        large_total_open_interest = clean_data_to_int(data_frame.iloc[1, 4]) - clean_data_to_int(data_frame.iloc[1, 8])
+        return large_open_interest, large_total_open_interest
+    except Exception as e:
+        print(f"[錯誤] 抓取資料失敗：{e}")
+        return None
 
 def load_previous_data():
-    if not os.path.exists(DATA_FILE):
+    try:
+        if not os.path.exists(DATA_FILE):
+            return None
+        with open(DATA_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[錯誤] 載入昨天資料失敗：{e}")
         return None
-    with open(DATA_FILE, 'r') as f:
-        return json.load(f)
 
 def save_today_data(data):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(data, f)
+    try:
+        with open(DATA_FILE, 'w') as f:
+            json.dump(data, f)
+    except Exception as e:
+        print(f"[錯誤] 儲存今天資料失敗：{e}")
 
 
 def generate_comparison(today_data, yesterday_data):
@@ -115,8 +142,12 @@ def generate_comparison(today_data, yesterday_data):
     )
 
 if __name__ == '__main__':
-    # today_str = date.today().strftime('%Y/%m/%d')
-    today_str = "2025/05/16"
+    # 載入環境變數
+    load_dotenv()
+
+    # 取得今天日期
+    today_str = date.today().strftime('%Y/%m/%d')
+
     taiex_oi, fut_total_oi = fetch_taiex_futures_data(today_str)
     opt_oi, opt_total_oi = fetch_option_data(today_str)
     large_5_oi, large_10_oi = fetch_large_future_data(today_str)
@@ -149,7 +180,7 @@ if __name__ == '__main__':
         )
 
     print(message_text)
-    # send_line_message(message_text)  # 你要開就取消註解
+    send_line_message(message_text)  # 你要開就取消註解
 
     # 儲存今天資料，給明天比對用
     save_today_data(today_data)

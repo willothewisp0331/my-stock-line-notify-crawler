@@ -9,6 +9,7 @@ from linebot.v3.messaging import MessagingApi, Configuration, ApiClient, PushMes
 from linebot.v3.messaging.models import FlexMessage, TextMessage, Message
 import re
 from dotenv import load_dotenv
+import time
 
 DATA_FILE = 'daily_open_interest.json'
 
@@ -402,6 +403,18 @@ def save_today_data(data):
     except Exception as e:
         print(f"[錯誤] 儲存今天資料失敗：{e}")
 
+def retry_fetch(func, args=(), kwargs={}, max_retries=4, retry_delay=15):
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"第 {attempt} 次嘗試執行 {func.__name__}...")
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"[警告] {func.__name__} 第 {attempt} 次失敗：{e}")
+            if attempt < max_retries:
+                time.sleep(retry_delay)
+            else:
+                raise RuntimeError(f"[錯誤] 連續 {max_retries} 次失敗：{func.__name__} 無法完成。") from e
+
 
 #
 # def generate_comparison(today_data, yesterday_data):
@@ -428,9 +441,9 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    taiex_oi, fut_total_oi = fetch_taiex_futures_data(today_str)
-    opt_oi, opt_total_oi = fetch_option_data(today_str)
-    large_5_oi, large_10_oi = fetch_large_future_data(today_str)
+    taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
+    opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))
+    large_5_oi, large_10_oi = retry_fetch(fetch_large_future_data, args=(today_str,))
 
     today_data = {
         'date': today_str,

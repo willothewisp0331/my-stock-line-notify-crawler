@@ -41,259 +41,49 @@ def generate_flex_message_dict(today_data, yesterday_data):
         return None
     else:
         data1 = f"{today_data['taiex']:,}"
+        data1_1 = format_diff(today_data['taiex'], yesterday_data['taiex'])
         data2 = f"{today_data['fut_total']:,}"
+        data2_1 = format_diff(today_data['fut_total'], yesterday_data['fut_total'])
         data3 = f"{today_data['opt_taiex']:,}"
+        data3_1 = format_diff(today_data['opt_taiex'], yesterday_data['opt_taiex'])
         data4 = f"{today_data['opt_total']:,}"
+        data4_1 = format_diff(today_data['opt_total'], yesterday_data['opt_total'])
         data5 = f"{today_data['large_5']:,}"
+        data5_1 = format_diff(today_data['large_5'], yesterday_data['large_5'])
         data6 = f"{today_data['large_10']:,}"
+        data6_1 = format_diff(today_data['large_10'], yesterday_data['large_10'])
         print(
             f"{today_data['date']}\n"
-            f"外資大台期貨未平倉口數：{data1} {format_diff(today_data['taiex'], yesterday_data['taiex'])} 口\n"
-            f"外資期貨總計未平倉口數：{data2} {format_diff(today_data['fut_total'], yesterday_data['fut_total'])} 口\n"
-            f"外資台指選擇權未平倉口數：{data3} {format_diff(today_data['opt_taiex'], yesterday_data['opt_taiex'])} 口\n"
-            f"外資選擇權總計未平倉口數：{data4} {format_diff(today_data['opt_total'], yesterday_data['opt_total'])} 口\n"
-            f"前五大台指期貨未平倉口數：{data5} {format_diff(today_data['large_5'], yesterday_data['large_5'])} 口\n"
-            f"前十大台指期貨未平倉口數：{data6} {format_diff(today_data['large_10'], yesterday_data['large_10'])} 口"
+            f"外資大台期貨未平倉口數：{data1} {data1_1} 口\n"
+            f"外資期貨總計未平倉口數：{data2} {data2_1} 口\n"
+            f"外資台指選擇權未平倉口數：{data3} {data3_1} 口\n"
+            f"外資選擇權總計未平倉口數：{data4} {data4_1} 口\n"
+            f"前五大台指期貨未平倉口數：{data5} {data5_1} 口\n"
+            f"前十大台指期貨未平倉口數：{data6} {data6_1} 口"
         )
-        bubble_dict = {
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "spacing": "md",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": today_data['date'],
-                        "weight": "bold",
-                        "size": "lg",
-                        "color": "#0B6E99"
-                    },
-                    {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            {
-                                "type": "text",
-                                "text": "類型",
-                                "size": "md",
-                                "color": "#555555",
-                                "flex": 4
-                            },
-                            {
-                                "type": "text",
-                                "text": "未平倉口數",
-                                "size": "xs",
-                                "color": "#555555",
-                                "flex": 3
-                            },
-                            {
-                                "type": "text",
-                                "text": "與前值相比",
-                                "size": "xs",
-                                "color": "#555555",
-                                "flex": 0
-                            }
-                        ]
-                    },
-                    {
-                        "type": "separator",
-                        "margin": "md"
-                    },
-                    {
-                        "type": "box",
-                        "layout": "vertical",
-                        "margin": "md",
-                        "spacing": "sm",
-                        "contents": [
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "外資台指期貨",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data1,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['taiex'], yesterday_data['taiex']),
-                                        "size": "sm",
-                                        "color": "#FF5555",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "外資期貨總計",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data2,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['fut_total'], yesterday_data['fut_total']),
-                                        "size": "sm",
-                                        "color": "#FF5555",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "separator"
-                            },
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "外資選擇權",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data3,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['opt_taiex'], today_data['opt_taiex']),
-                                        "size": "sm",
-                                        "color": "#00AA00",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "外資選擇權總計",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data4,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['opt_total'], yesterday_data['opt_total']),
-                                        "size": "sm",
-                                        "color": "#00AA00",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "separator"
-                            },
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "前五大台指期",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data5,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['large_5'], yesterday_data['large_5']),
-                                        "size": "sm",
-                                        "color": "#FF5555",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "box",
-                                "layout": "horizontal",
-                                "contents": [
-                                    {
-                                        "type": "text",
-                                        "text": "前十大台指期",
-                                        "size": "sm",
-                                        "color": "#555555",
-                                        "flex": 3
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": data6,
-                                        "size": "sm",
-                                        "color": "#111111",
-                                        "flex": 2,
-                                        "align": "end"
-                                    },
-                                    {
-                                        "type": "text",
-                                        "text": format_diff(today_data['large_10'], yesterday_data['large_10']),
-                                        "size": "sm",
-                                        "color": "#FF5555",
-                                        "flex": 2,
-                                        "align": "end"
-                                    }
-                                ]
-                            },
-                            {
-                                "type": "separator"
-                            }
-                        ]
-                    }
-                ]
-            }
-        }
+
+        with open('flex_template.json', 'r', encoding='utf-8') as file:
+            bubble_dict = json.load(file)
+        bubble_dict['body']['contents'][0]['text'] = today_data['date']
+        bubble_dict['body']['contents'][3]['contents'][0]['contents'][1]['text'] = data1
+        bubble_dict['body']['contents'][3]['contents'][0]['contents'][2]['text'] = data1_1
+        bubble_dict['body']['contents'][3]['contents'][0]['contents'][2]['color'] = "#00AA00""#FF5555" if data1_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][1]['contents'][1]['text'] = data2
+        bubble_dict['body']['contents'][3]['contents'][1]['contents'][2]['text'] = data2_1
+        bubble_dict['body']['contents'][3]['contents'][1]['contents'][2]['color'] = "#00AA00" if data2_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][3]['contents'][1]['text'] = data3
+        bubble_dict['body']['contents'][3]['contents'][3]['contents'][2]['text'] = data3_1
+        bubble_dict['body']['contents'][3]['contents'][3]['contents'][2]['color'] = "#00AA00" if data3_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][4]['contents'][1]['text'] = data4
+        bubble_dict['body']['contents'][3]['contents'][4]['contents'][2]['text'] = data4_1
+        bubble_dict['body']['contents'][3]['contents'][4]['contents'][2]['color'] = "#00AA00" if data4_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][6]['contents'][1]['text'] = data5
+        bubble_dict['body']['contents'][3]['contents'][6]['contents'][2]['text'] = data5_1
+        bubble_dict['body']['contents'][3]['contents'][6]['contents'][2]['color'] = "#00AA00" if data5_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][7]['contents'][1]['text'] = data6
+        bubble_dict['body']['contents'][3]['contents'][7]['contents'][2]['text'] = data6_1
+        bubble_dict['body']['contents'][3]['contents'][7]['contents'][2]['color'] = "#00AA00" if data6_1[1] == "-" else "#FF5555"
+
         flex_msg = FlexMessage.from_dict({
             "type": "flex",
             "altText": "股市資訊",
@@ -441,6 +231,7 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
+    # today_str = "2025/05/22" # 測試用
     taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
     opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))
     large_5_oi, large_10_oi = retry_fetch(fetch_large_future_data, args=(today_str,))

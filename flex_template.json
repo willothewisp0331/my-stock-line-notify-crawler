@@ -1,0 +1,239 @@
+{
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "None",
+                        "weight": "bold",
+                        "size": "lg",
+                        "color": "#0B6E99"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            {
+                                "type": "text",
+                                "text": "類型",
+                                "size": "md",
+                                "color": "#555555",
+                                "flex": 4
+                            },
+                            {
+                                "type": "text",
+                                "text": "未平倉口數",
+                                "size": "xs",
+                                "color": "#555555",
+                                "flex": 3
+                            },
+                            {
+                                "type": "text",
+                                "text": "與前值相比",
+                                "size": "xs",
+                                "color": "#555555",
+                                "flex": 0
+                            }
+                        ]
+                    },
+                    {
+                        "type": "separator",
+                        "margin": "md"
+                    },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "md",
+                        "spacing": "sm",
+                        "contents": [
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "外資台指期貨",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#FF5555",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "外資期貨總計",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#FF5555",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "separator"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "外資選擇權",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#00AA00",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "外資選擇權總計",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#00AA00",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "separator"
+                            },
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "前五大台指期",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#FF5555",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "box",
+                                "layout": "horizontal",
+                                "contents": [
+                                    {
+                                        "type": "text",
+                                        "text": "前十大台指期",
+                                        "size": "sm",
+                                        "color": "#555555",
+                                        "flex": 3
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#111111",
+                                        "flex": 2,
+                                        "align": "end"
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": "None",
+                                        "size": "sm",
+                                        "color": "#FF5555",
+                                        "flex": 2,
+                                        "align": "end"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "separator"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }

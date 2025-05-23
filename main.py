@@ -428,7 +428,6 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    today_str = "2025/05/22"
     taiex_oi, fut_total_oi = fetch_taiex_futures_data(today_str)
     opt_oi, opt_total_oi = fetch_option_data(today_str)
     large_5_oi, large_10_oi = fetch_large_future_data(today_str)
@@ -448,7 +447,7 @@ if __name__ == '__main__':
 
     flex_message = generate_flex_message_dict(today_data, yesterday_data)
 
-    # if flex_message:
-    #     send_line_message(flex_message)
+    if flex_message:
+        send_line_message(flex_message)
     # 儲存今天資料，給明天比對用
     save_today_data(today_data)

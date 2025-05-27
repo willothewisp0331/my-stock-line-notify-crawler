@@ -16,7 +16,7 @@ DATA_FILE = 'daily_open_interest.json'
 def send_line_message(flex_msg):
     try:
         access_token = os.environ.get("LINE_TOKEN")
-        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2")]
+        line_user_id = [os.environ.get("USER_ID3")]
         if not access_token:
             print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
         configuration = Configuration(access_token=access_token)
@@ -35,8 +35,10 @@ def generate_flex_message_dict(today_data, yesterday_data):
         diff = current - prev
         sign = "+" if diff >= 0 else ""
         return f"({sign}{diff:,}）"
-
-    if today_data['date'] == yesterday_data['date']:
+    if yesterday_data is None:
+        print("[錯誤] 無法找到昨天的資料，無法進行比較")
+        return None
+    elif today_data['date'] == yesterday_data['date']:
         print("[錯誤] 日期與昨天相同，無法比較")
         return None
     else:
@@ -231,7 +233,7 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    # today_str = "2025/05/22" # 測試用
+    # today_str = "2025/05/26" # 測試用
     taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
     opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))
     large_5_oi, large_10_oi = retry_fetch(fetch_large_future_data, args=(today_str,))

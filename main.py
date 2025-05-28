@@ -16,7 +16,7 @@ DATA_FILE = 'daily_open_interest.json'
 def send_line_message(flex_msg):
     try:
         access_token = os.environ.get("LINE_TOKEN")
-        line_user_id = [os.environ.get("USER_ID3")]
+        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
         if not access_token:
             print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
         configuration = Configuration(access_token=access_token)

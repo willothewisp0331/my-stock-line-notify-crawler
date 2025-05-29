@@ -69,7 +69,7 @@ def generate_flex_message_dict(today_data, yesterday_data):
         bubble_dict['body']['contents'][0]['text'] = today_data['date']
         bubble_dict['body']['contents'][3]['contents'][0]['contents'][1]['text'] = data1
         bubble_dict['body']['contents'][3]['contents'][0]['contents'][2]['text'] = data1_1
-        bubble_dict['body']['contents'][3]['contents'][0]['contents'][2]['color'] = "#00AA00""#FF5555" if data1_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][0]['contents'][2]['color'] = "#00AA00" if data1_1[1] == "-" else "#FF5555"
         bubble_dict['body']['contents'][3]['contents'][1]['contents'][1]['text'] = data2
         bubble_dict['body']['contents'][3]['contents'][1]['contents'][2]['text'] = data2_1
         bubble_dict['body']['contents'][3]['contents'][1]['contents'][2]['color'] = "#00AA00" if data2_1[1] == "-" else "#FF5555"

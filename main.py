@@ -16,7 +16,7 @@ DATA_FILE = 'daily_open_interest.json'
 def send_line_message(flex_msg):
     try:
         access_token = os.environ.get("LINE_TOKEN")
-        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
+        line_user_id = [os.environ.get("USER_ID1") , os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
         if not access_token:
             print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
         configuration = Configuration(access_token=access_token)
@@ -54,6 +54,10 @@ def generate_flex_message_dict(today_data, yesterday_data):
         data5_1 = format_diff(today_data['large_5'], yesterday_data['large_5'])
         data6 = f"{today_data['large_10']:,}"
         data6_1 = format_diff(today_data['large_10'], yesterday_data['large_10'])
+        data7 = f"{today_data['small_ratio']}"
+        data7_1 = f"{yesterday_data['small_ratio']}"
+        data8 = f"{today_data['mini_ratio']}"
+        data8_1 = f"{yesterday_data['mini_ratio']}"
         print(
             f"{today_data['date']}\n"
             f"外資大台期貨未平倉口數：{data1} {data1_1} 口\n"
@@ -61,7 +65,9 @@ def generate_flex_message_dict(today_data, yesterday_data):
             f"外資台指選擇權未平倉口數：{data3} {data3_1} 口\n"
             f"外資選擇權總計未平倉口數：{data4} {data4_1} 口\n"
             f"前五大台指期貨未平倉口數：{data5} {data5_1} 口\n"
-            f"前十大台指期貨未平倉口數：{data6} {data6_1} 口"
+            f"前十大台指期貨未平倉口數：{data6} {data6_1} 口\n"
+            f"小台散戶多空比{data7} {data7_1} %\n"
+            f"微台散戶多空比{data8} {data8_1} %\n"
         )
 
         with open('flex_template.json', 'r', encoding='utf-8') as file:
@@ -85,6 +91,12 @@ def generate_flex_message_dict(today_data, yesterday_data):
         bubble_dict['body']['contents'][3]['contents'][7]['contents'][1]['text'] = data6
         bubble_dict['body']['contents'][3]['contents'][7]['contents'][2]['text'] = data6_1
         bubble_dict['body']['contents'][3]['contents'][7]['contents'][2]['color'] = "#00AA00" if data6_1[1] == "-" else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][11]['contents'][1]['text'] = data7
+        bubble_dict['body']['contents'][3]['contents'][11]['contents'][2]['text'] = data7_1
+        bubble_dict['body']['contents'][3]['contents'][11]['contents'][2]['color'] = "#00AA00" if float(data7) < float(data7_1) else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][12]['contents'][1]['text'] = data8
+        bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['text'] = data8_1
+        bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['color'] = "#00AA00"  if float(data8) < float(data8_1) else "#FF5555"
 
         flex_msg = FlexMessage.from_dict({
             "type": "flex",
@@ -93,6 +105,81 @@ def generate_flex_message_dict(today_data, yesterday_data):
         })
     return flex_msg
 
+def fetch_total_oi_from_daily_report(query_date, commodity_id):
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futDailyMarketReport"
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            url,
+            fields={
+                'queryType': 2,
+                'marketCode': 0,
+                'commodity_id': commodity_id,
+                'queryDate': query_date
+            }
+        )
+        soup = BeautifulSoup(response.data, 'html.parser')
+        tables = soup.find_all('table')
+        df = pd.read_html(StringIO(str(tables)))[0]
+        total_oi_str = df.iloc[-1, 12]  # OI 在第13欄
+        total_oi = int(str(total_oi_str).replace(',', ''))
+        return total_oi
+    except Exception as e:
+        print(f"[錯誤] 抓取每日報表 {commodity_id} 失敗：{e}")
+        return None
+
+def fetch_legal_total_oi(query_date, commodity_id):
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futContractsDate"
+        http = urllib3.PoolManager()
+        response = http.request(
+            'POST',
+            url,
+            fields={
+                'queryType': 1,
+                'doQuery': 1,
+                'commodityId': commodity_id,
+                'queryDate': query_date
+            }
+        )
+        soup = BeautifulSoup(response.data, 'html.parser')
+        tables = soup.find_all('table')
+        df = pd.read_html(StringIO(str(tables)))[0]
+
+        for i in range(len(df)):
+            if df.iloc[i, 1].strip() == "期貨合計":
+                oi_str = df.iloc[i, 13]
+                legal_oi = int(str(oi_str).replace(',', ''))
+                return legal_oi
+
+        print(f"[警告] 未找到 {commodity_id} 的期貨合計資料")
+        return None
+    except Exception as e:
+        print(f"[錯誤] 抓取法人持倉 {commodity_id} 失敗：{e}")
+        return None
+
+def fetch_retail_long_short_ratio(query_date):
+    # 抓資料
+    small_total_oi = fetch_total_oi_from_daily_report(query_date, "MTX")
+    mini_total_oi = fetch_total_oi_from_daily_report(query_date, "TMF")
+    small_legal_oi = fetch_legal_total_oi(query_date, "MXF")
+    mini_legal_oi = fetch_legal_total_oi(query_date, "TMF")
+
+    # 計算與輸出
+    if small_total_oi and small_legal_oi:
+        small_ratio = round(-100 * small_legal_oi / small_total_oi, 2)
+    else:
+        print("[錯誤] 小台資料不足，無法計算")
+        small_ratio = None
+
+    if mini_total_oi and mini_legal_oi:
+        mini_ratio = round(-100 * mini_legal_oi / mini_total_oi, 2)
+    else:
+        print("[錯誤] 微台資料不足，無法計算")
+        mini_ratio = None
+
+    return small_ratio, mini_ratio
 
 def fetch_taiex_futures_data(query_date):
     try:
@@ -120,7 +207,6 @@ def fetch_taiex_futures_data(query_date):
         print(f"[錯誤] 抓取資料失敗：{e}")
         return None
 
-
 def fetch_option_data(query_date):
     try:
         url = "https://www.taifex.com.tw/cht/3/optContractsDate"
@@ -147,12 +233,10 @@ def fetch_option_data(query_date):
         print(f"[錯誤] 抓取資料失敗：{e}")
         return None
 
-
 def clean_data_to_int(data):
     data_clean = re.sub(r"\s*\(.*?\)", "", data)
     data_clean = data_clean.replace(",", "")
     return int(data_clean)
-
 
 def fetch_large_future_data(query_date):
     try:
@@ -176,7 +260,6 @@ def fetch_large_future_data(query_date):
         print(f"[錯誤] 抓取資料失敗：{e}")
         return None
 
-
 def load_previous_data():
     try:
         if not os.path.exists(DATA_FILE):
@@ -186,7 +269,6 @@ def load_previous_data():
     except Exception as e:
         print(f"[錯誤] 載入昨天資料失敗：{e}")
         return None
-
 
 def save_today_data(data):
     try:
@@ -207,36 +289,18 @@ def retry_fetch(func, args=(), kwargs={}, max_retries=4, retry_delay=15):
             else:
                 raise RuntimeError(f"[錯誤] 連續 {max_retries} 次失敗：{func.__name__} 無法完成。") from e
 
-
-#
-# def generate_comparison(today_data, yesterday_data):
-#     def format_diff(current, prev):
-#         diff = current - prev
-#         sign = "+" if diff >= 0 else ""
-#         return f"{current:,}（{sign}{diff:,}）"
-#     if today_data['date'] == yesterday_data['date']:
-#         return "[錯誤] 日期與昨天相同，無法比較"
-#     else:
-#         return (
-#             f"{today_data['date']}\n"
-#             f"外資大台期貨未平倉口數：{format_diff(today_data['taiex'], yesterday_data['taiex'])} 口\n"
-#             f"外資期貨總計未平倉口數：{format_diff(today_data['fut_total'], yesterday_data['fut_total'])} 口\n"
-#             f"外資台指選擇權未平倉口數：{format_diff(today_data['opt_taiex'], yesterday_data['opt_taiex'])} 口\n"
-#             f"外資選擇權總計未平倉口數：{format_diff(today_data['opt_total'], yesterday_data['opt_total'])} 口\n"
-#             f"前五大台指期貨未平倉口數：{format_diff(today_data['large_5'], yesterday_data['large_5'])} 口\n"
-#             f"前十大台指期貨未平倉口數：{format_diff(today_data['large_10'], yesterday_data['large_10'])} 口"
-#         )
-
 if __name__ == '__main__':
     # 載入環境變數
     load_dotenv()
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    # today_str = "2025/05/26" # 測試用
+    # today_str = "2025/06/06" # 測試用
+
     taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
     opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))
     large_5_oi, large_10_oi = retry_fetch(fetch_large_future_data, args=(today_str,))
+    small_ratio, mini_ratio = retry_fetch(fetch_retail_long_short_ratio, args=(today_str,))
 
     today_data = {
         'date': today_str,
@@ -245,7 +309,9 @@ if __name__ == '__main__':
         'opt_taiex': opt_oi,
         'opt_total': opt_total_oi,
         'large_5': large_5_oi,
-        'large_10': large_10_oi
+        'large_10': large_10_oi,
+        'small_ratio': small_ratio,
+        'mini_ratio': mini_ratio
     }
 
     # 載入昨天的資料

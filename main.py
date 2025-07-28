@@ -16,7 +16,7 @@ DATA_FILE = 'daily_open_interest.json'
 def send_line_message(flex_msg):
     try:
         access_token = os.environ.get("LINE_TOKEN")
-        line_user_id = [os.environ.get("USER_ID1") , os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
+        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
         if not access_token:
             print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
         configuration = Configuration(access_token=access_token)
@@ -197,6 +197,7 @@ def fetch_taiex_futures_data(query_date):
         soup = BeautifulSoup(response.data, 'html.parser')
         table_html = soup.find_all('table')
         data_frame = pd.read_html(StringIO(str(table_html)))[0]
+        print(data_frame)
         for i in range(len(data_frame)):
             if data_frame.iloc[i, 1] == "期貨 小計" and data_frame.iloc[i, 2] == "外資":
                 foreign_total_open_interest = int(data_frame.iloc[i, 13])
@@ -295,7 +296,7 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    # today_str = "2025/06/06" # 測試用
+    # today_str = "2025/07/25" # 測試用
 
     taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
     opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))

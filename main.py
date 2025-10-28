@@ -10,6 +10,7 @@ from linebot.v3.messaging.models import FlexMessage, TextMessage, Message
 import re
 from dotenv import load_dotenv
 import time
+import traceback
 
 DATA_FILE = 'daily_open_interest.json'
 
@@ -123,11 +124,11 @@ def fetch_total_oi_from_daily_report(query_date, commodity_id):
         tables = soup.find_all('table')
         df = pd.read_html(StringIO(str(tables)))[0]
         total_oi_str = df.iloc[-1, 12]  # OI 在第13欄
-        total_oi = int(str(total_oi_str).replace(',', ''))
+        total_oi = clean_data_to_int(total_oi_str)
         return total_oi
     except Exception as e:
         print(f"[錯誤] 抓取每日報表 {commodity_id} 失敗：{e}")
-        return None
+        raise
 
 def fetch_legal_total_oi(query_date, commodity_id):
     try:
@@ -149,15 +150,14 @@ def fetch_legal_total_oi(query_date, commodity_id):
 
         for i in range(len(df)):
             if df.iloc[i, 1].strip() == "期貨合計":
-                oi_str = df.iloc[i, 13]
-                legal_oi = int(str(oi_str).replace(',', ''))
+                legal_oi = clean_data_to_int(df.iloc[i, 13])
                 return legal_oi
 
         print(f"[警告] 未找到 {commodity_id} 的期貨合計資料")
         return None
     except Exception as e:
         print(f"[錯誤] 抓取法人持倉 {commodity_id} 失敗：{e}")
-        return None
+        raise
 
 def fetch_retail_long_short_ratio(query_date):
     # 抓資料
@@ -171,13 +171,13 @@ def fetch_retail_long_short_ratio(query_date):
         small_ratio = round(-100 * small_legal_oi / small_total_oi, 2)
     else:
         print("[錯誤] 小台資料不足，無法計算")
-        small_ratio = None
+        raise ValueError("小台資料不足，無法計算")
 
     if mini_total_oi and mini_legal_oi:
         mini_ratio = round(-100 * mini_legal_oi / mini_total_oi, 2)
     else:
         print("[錯誤] 微台資料不足，無法計算")
-        mini_ratio = None
+        raise ValueError("微台資料不足，無法計算")
 
     return small_ratio, mini_ratio
 
@@ -197,16 +197,16 @@ def fetch_taiex_futures_data(query_date):
         soup = BeautifulSoup(response.data, 'html.parser')
         table_html = soup.find_all('table')
         data_frame = pd.read_html(StringIO(str(table_html)))[0]
-        print(data_frame)
+        # print(data_frame)
         for i in range(len(data_frame)):
             if data_frame.iloc[i, 1] == "期貨 小計" and data_frame.iloc[i, 2] == "外資":
-                foreign_total_open_interest = int(data_frame.iloc[i, 13])
+                foreign_total_open_interest = clean_data_to_int(data_frame.iloc[i, 13])
             if data_frame.iloc[i, 1] == "臺股期貨" and data_frame.iloc[i, 2] == "外資":
-                taiex_open_interest = int(data_frame.iloc[i, 13])
+                taiex_open_interest = clean_data_to_int(data_frame.iloc[i, 13])
         return taiex_open_interest, foreign_total_open_interest
     except Exception as e:
         print(f"[錯誤] 抓取資料失敗：{e}")
-        return None
+        raise
 
 def fetch_option_data(query_date):
     try:
@@ -226,17 +226,26 @@ def fetch_option_data(query_date):
         data_frame = pd.read_html(StringIO(str(table_html)))[0]
         for i in range(len(data_frame)):
             if data_frame.iloc[i, 1] == "選擇權 小計" and data_frame.iloc[i, 2] == "外資":
-                foreign_total_option_open_interest = int(data_frame.iloc[i, 13])
+                foreign_total_option_open_interest = clean_data_to_int(data_frame.iloc[i, 13])
             if data_frame.iloc[i, 1] == "臺指選擇權" and data_frame.iloc[i, 2] == "外資":
-                option_open_interest = int(data_frame.iloc[i, 13])
+                option_open_interest = clean_data_to_int(data_frame.iloc[i, 13])
         return option_open_interest, foreign_total_option_open_interest
     except Exception as e:
         print(f"[錯誤] 抓取資料失敗：{e}")
-        return None
+        raise
 
 def clean_data_to_int(data):
-    data_clean = re.sub(r"\s*\(.*?\)", "", data)
+    # 處理特殊值
+    if pd.isna(data) or str(data).strip() in ['-', '', 'nan', 'NaN', 'NAN']:
+        raise ValueError(f"資料為空值或無效值: {data}")
+    
+    data_clean = re.sub(r"\s*\(.*?\)", "", str(data))
     data_clean = data_clean.replace(",", "")
+    data_clean = data_clean.strip()
+    
+    if not data_clean or data_clean == '-':
+        raise ValueError(f"清理後的資料為空或無效: {data}")
+    
     return int(data_clean)
 
 def fetch_large_future_data(query_date):
@@ -259,7 +268,7 @@ def fetch_large_future_data(query_date):
         return large_open_interest, large_total_open_interest
     except Exception as e:
         print(f"[錯誤] 抓取資料失敗：{e}")
-        return None
+        raise
 
 def load_previous_data():
     try:
@@ -278,17 +287,28 @@ def save_today_data(data):
     except Exception as e:
         print(f"[錯誤] 儲存今天資料失敗：{e}")
 
-def retry_fetch(func, args=(), kwargs={}, max_retries=4, retry_delay=15):
+def retry_fetch(func, args=(), kwargs={}, max_retries=5, retry_delay=30):
+    """
+    重試機制：執行函數，失敗後等待指定時間再試
+    最多嘗試 max_retries 次，即使全部失敗也不會中斷程序
+    """
     for attempt in range(1, max_retries + 1):
         try:
-            print(f"第 {attempt} 次嘗試執行 {func.__name__}...")
-            return func(*args, **kwargs)
+            print(f"[LOG] 第 {attempt}/{max_retries} 次嘗試執行 {func.__name__}...")
+            result = func(*args, **kwargs)
+            print(f"[LOG] {func.__name__} 第 {attempt} 次執行成功")
+            return result
         except Exception as e:
-            print(f"[警告] {func.__name__} 第 {attempt} 次失敗：{e}")
+            print(f"[錯誤] {func.__name__} 第 {attempt} 次失敗：{e}")
+            print(f"[LOG] 詳細錯誤訊息：")
+            traceback.print_exc()
+            
             if attempt < max_retries:
+                print(f"[LOG] 等待 {retry_delay} 秒後再試...")
                 time.sleep(retry_delay)
             else:
-                raise RuntimeError(f"[錯誤] 連續 {max_retries} 次失敗：{func.__name__} 無法完成。") from e
+                print(f"[錯誤] {func.__name__} 連續 {max_retries} 次都失敗，返回 None")
+    return None
 
 if __name__ == '__main__':
     # 載入環境變數
@@ -296,12 +316,29 @@ if __name__ == '__main__':
 
     # 取得今天日期
     today_str = date.today().strftime('%Y/%m/%d')
-    # today_str = "2025/07/25" # 測試用
+    # today_str = "2025/10/27" # 測試用
 
-    taiex_oi, fut_total_oi = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
-    opt_oi, opt_total_oi = retry_fetch(fetch_option_data, args=(today_str,))
-    large_5_oi, large_10_oi = retry_fetch(fetch_large_future_data, args=(today_str,))
-    small_ratio, mini_ratio = retry_fetch(fetch_retail_long_short_ratio, args=(today_str,))
+    print(f"[LOG] 開始抓取 {today_str} 的資料...")
+    
+    # 使用重試機制抓取資料（最多重試5次，每次間隔30秒）
+    futures_result = retry_fetch(fetch_taiex_futures_data, args=(today_str,))
+    option_result = retry_fetch(fetch_option_data, args=(today_str,))
+    large_result = retry_fetch(fetch_large_future_data, args=(today_str,))
+    ratio_result = retry_fetch(fetch_retail_long_short_ratio, args=(today_str,))
+
+    # 檢查所有資料是否都成功抓取（重試5次後）
+    if futures_result is None or option_result is None or large_result is None or ratio_result is None:
+        print("[錯誤] 有資料在重試5次後仍無法抓取，無法發送 LINE 訊息")
+        print("[錯誤] 已確保資料正確性，終止程式")
+        exit(1)
+
+    # 所有資料都成功抓取，解包資料
+    taiex_oi, fut_total_oi = futures_result
+    opt_oi, opt_total_oi = option_result
+    large_5_oi, large_10_oi = large_result
+    small_ratio, mini_ratio = ratio_result
+
+    print(f"[LOG] 所有資料抓取成功，準備產生訊息...")
 
     today_data = {
         'date': today_str,
@@ -314,6 +351,7 @@ if __name__ == '__main__':
         'small_ratio': small_ratio,
         'mini_ratio': mini_ratio
     }
+    print(today_data)
 
     # 載入昨天的資料
     yesterday_data = load_previous_data()
@@ -321,6 +359,13 @@ if __name__ == '__main__':
     flex_message = generate_flex_message_dict(today_data, yesterday_data)
 
     if flex_message:
+        print(f"[LOG] 準備發送 LINE 訊息...")
         send_line_message(flex_message)
+        print(f"[LOG] LINE 訊息發送成功")
+    else:
+        print("[錯誤] 無法產生 Flex 訊息，無法發送 LINE 訊息")
+        exit(1)
+    
     # 儲存今天資料，給明天比對用
     save_today_data(today_data)
+    print(f"[LOG] 程式執行完成")

@@ -324,6 +324,123 @@
           },
           {
             "type": "separator"
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+              {
+                "type": "box",
+                "layout": "horizontal",
+                "contents": [
+                  {
+                    "type": "text",
+                    "text": "近20日波動度評估",
+                    "size": "md",
+                    "color": "#555555",
+                    "flex": 3
+                  },
+                  {
+                    "type": "text",
+                    "text": "點數",
+                    "size": "xs",
+                    "color": "#555555",
+                    "flex": 2,
+                    "align": "end"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "最大振幅",
+                "size": "sm",
+                "color": "#555555",
+                "flex": 3
+              },
+              {
+                "type": "text",
+                "text": "None",
+                "size": "sm",
+                "color": "#111111",
+                "flex": 2,
+                "align": "end"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "最小振幅",
+                "size": "sm",
+                "color": "#555555",
+                "flex": 3
+              },
+              {
+                "type": "text",
+                "text": "None",
+                "size": "sm",
+                "color": "#111111",
+                "flex": 2,
+                "align": "end"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "平均振幅",
+                "size": "sm",
+                "color": "#555555",
+                "flex": 3
+              },
+              {
+                "type": "text",
+                "text": "None",
+                "size": "sm",
+                "color": "#111111",
+                "flex": 2,
+                "align": "end"
+              }
+            ]
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "今日振幅",
+                "size": "sm",
+                "color": "#000000",
+                "flex": 3
+              },
+              {
+                "type": "text",
+                "text": "None",
+                "size": "sm",
+                "color": "#FF5555",
+                "flex": 2,
+                "align": "end"
+              }
+            ]
           }
         ]
       }

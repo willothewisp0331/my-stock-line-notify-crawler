@@ -13,11 +13,14 @@ import time
 import traceback
 
 DATA_FILE = 'daily_open_interest.json'
+AMPLITUDE_HISTORY_SIZE = 20
 
 def send_line_message(flex_msg):
     try:
         access_token = os.environ.get("LINE_TOKEN")
-        line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
+        line_user_id = [os.environ.get("USER_ID1")]
+        
+        # line_user_id = [os.environ.get("USER_ID1"), os.environ.get("USER_ID2"), os.environ.get("USER_ID3")]
         if not access_token:
             print("環境變數未設定，請確認 bat 檔或 .env 檔是否正確！")
         configuration = Configuration(access_token=access_token)
@@ -69,6 +72,11 @@ def generate_flex_message_dict(today_data, yesterday_data):
             f"前十大台指期貨未平倉口數：{data6} {data6_1} 口\n"
             f"小台散戶多空比{data7} {data7_1} %\n"
             f"微台散戶多空比{data8} {data8_1} %\n"
+            f"振幅統計(近20日)：\n"
+            f"  最大值：{today_data.get('amplitude_max', '-')}\n"
+            f"  最小值：{today_data.get('amplitude_min', '-')}\n"
+            f"  平均值：{today_data.get('amplitude_avg', '-')}\n"
+            f"  今日振幅：{today_data.get('amplitude_today', '-')}\n"
         )
 
         with open('flex_template.json', 'r', encoding='utf-8') as file:
@@ -98,6 +106,15 @@ def generate_flex_message_dict(today_data, yesterday_data):
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][1]['text'] = data8
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['text'] = data8_1
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['color'] = "#00AA00"  if float(data8) < float(data8_1) else "#FF5555"
+        # 振幅區（兩欄：名稱、數值）
+        amp_max = str(today_data.get('amplitude_max', '-'))
+        amp_min = str(today_data.get('amplitude_min', '-'))
+        amp_avg = str(today_data.get('amplitude_avg', '-'))
+        amp_today = str(today_data.get('amplitude_today', '-'))
+        bubble_dict['body']['contents'][3]['contents'][14]['contents'][1]['text'] = amp_max
+        bubble_dict['body']['contents'][3]['contents'][15]['contents'][1]['text'] = amp_min
+        bubble_dict['body']['contents'][3]['contents'][16]['contents'][1]['text'] = amp_avg
+        bubble_dict['body']['contents'][3]['contents'][17]['contents'][1]['text'] = amp_today
 
         flex_msg = FlexMessage.from_dict({
             "type": "flex",
@@ -105,6 +122,44 @@ def generate_flex_message_dict(today_data, yesterday_data):
             "contents": bubble_dict
         })
     return flex_msg
+
+def fetch_daily_amplitude(query_date, commodity_id="TX"):
+    """
+    抓取指定日期的期貨日盤振幅（最高價 - 最低價）。
+    資料來源：期交所期貨每日交易行情查詢 futDailyMarketReport
+    預設抓取大台(TX)近月契約的日盤振幅。
+    """
+    try:
+        url = "https://www.taifex.com.tw/cht/3/futDailyMarketReport"
+        http = urllib3.PoolManager()
+        response = http.request(
+            "POST",
+            url,
+            fields={
+                "queryType": 2,
+                "marketCode": 0,
+                "commodity_id": commodity_id,
+                "queryDate": query_date,
+            },
+        )
+        soup = BeautifulSoup(response.data, "html.parser")
+        tables = soup.find_all("table")
+        df = pd.read_html(StringIO(str(tables)))[0]
+
+        # 表格結構：契約、到期月份、開盤、最高、最低、最後... 最高通常在欄 3，最低在欄 4
+        # 近月契約為第一列資料（索引 0），最後一列為合計
+        high_val = df.iloc[0, 3]  # 最高
+        low_val = df.iloc[0, 4]   # 最低
+
+        # 期貨價格可能為小數，需先轉 float 再取整
+        high = int(float(str(high_val).replace(",", "").strip()))
+        low = int(float(str(low_val).replace(",", "").strip()))
+        amplitude = high - low
+        return amplitude
+    except Exception as e:
+        print(f"[錯誤] 抓取日盤振幅 {commodity_id} 失敗：{e}")
+        raise
+
 
 def fetch_total_oi_from_daily_report(query_date, commodity_id):
     try:
@@ -274,16 +329,56 @@ def load_previous_data():
     try:
         if not os.path.exists(DATA_FILE):
             return None
-        with open(DATA_FILE, 'r') as f:
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
         print(f"[錯誤] 載入昨天資料失敗：{e}")
         return None
 
-def save_today_data(data):
+
+def get_amplitude_history(loaded_data):
+    """從載入的資料取得 amplitude_history，若無則回傳空列表"""
+    if loaded_data is None:
+        return []
+    return loaded_data.get('amplitude_history', [])
+
+
+def update_amplitude_history(history, new_date, new_amplitude):
+    """
+    FIFO 更新振幅歷史：若已滿 20 筆則踢除最久一筆，加入新資料。
+    history 為 [{"date": "YYYY/MM/DD", "amplitude": int}, ...]，依日期由舊到新排序。
+    """
+    new_entry = {"date": new_date, "amplitude": new_amplitude}
+    updated = list(history)
+    if len(updated) >= AMPLITUDE_HISTORY_SIZE:
+        updated.pop(0)
+    updated.append(new_entry)
+    return updated
+
+
+def compute_amplitude_stats(history):
+    """
+    計算近 20 日振幅統計：平均、最小、最大、今日振幅。
+    若無資料則回傳 None。
+    """
+    if not history:
+        return None
+    amplitudes = [h["amplitude"] for h in history]
+    return {
+        "avg": round(sum(amplitudes) / len(amplitudes), 1),
+        "min": min(amplitudes),
+        "max": max(amplitudes),
+        "today": history[-1]["amplitude"],
+    }
+
+
+def save_today_data(data, amplitude_history=None):
     try:
-        with open(DATA_FILE, 'w') as f:
-            json.dump(data, f)
+        to_save = dict(data)
+        if amplitude_history is not None:
+            to_save["amplitude_history"] = amplitude_history
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(to_save, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[錯誤] 儲存今天資料失敗：{e}")
 
@@ -315,8 +410,8 @@ if __name__ == '__main__':
     load_dotenv()
 
     # 取得今天日期
-    today_str = date.today().strftime('%Y/%m/%d')
-    # today_str = "2025/10/27" # 測試用
+    # today_str = date.today().strftime('%Y/%m/%d')
+    today_str = "2026/03/12" # 測試用
 
     print(f"[LOG] 開始抓取 {today_str} 的資料...")
     
@@ -325,6 +420,7 @@ if __name__ == '__main__':
     option_result = retry_fetch(fetch_option_data, args=(today_str,))
     large_result = retry_fetch(fetch_large_future_data, args=(today_str,))
     ratio_result = retry_fetch(fetch_retail_long_short_ratio, args=(today_str,))
+    amplitude_result = retry_fetch(fetch_daily_amplitude, args=(today_str,))
 
     # 檢查所有資料是否都成功抓取（重試5次後）
     if futures_result is None or option_result is None or large_result is None or ratio_result is None:
@@ -351,10 +447,27 @@ if __name__ == '__main__':
         'small_ratio': small_ratio,
         'mini_ratio': mini_ratio
     }
-    print(today_data)
 
-    # 載入昨天的資料
+    # 振幅：載入歷史、FIFO 更新、計算統計
     yesterday_data = load_previous_data()
+    amplitude_history = get_amplitude_history(yesterday_data)
+    if amplitude_result is not None:
+        amplitude_history = update_amplitude_history(
+            amplitude_history, today_str, amplitude_result
+        )
+        stats = compute_amplitude_stats(amplitude_history)
+        if stats:
+            today_data["amplitude_avg"] = stats["avg"]
+            today_data["amplitude_min"] = stats["min"]
+            today_data["amplitude_max"] = stats["max"]
+            today_data["amplitude_today"] = stats["today"]
+            print(
+                f"[振幅] 近20日 avg={stats['avg']} min={stats['min']} max={stats['max']} 今日={stats['today']}"
+            )
+    else:
+        # 振幅抓取失敗時沿用原 history，不加入今日
+        print("[警告] 振幅抓取失敗，未更新 amplitude_history")
+    print(today_data)
 
     flex_message = generate_flex_message_dict(today_data, yesterday_data)
 
@@ -366,6 +479,6 @@ if __name__ == '__main__':
         print("[錯誤] 無法產生 Flex 訊息，無法發送 LINE 訊息")
         exit(1)
     
-    # 儲存今天資料，給明天比對用
-    save_today_data(today_data)
+    # 儲存今天資料（含 amplitude_history），給明天比對用
+    save_today_data(today_data, amplitude_history)
     print(f"[LOG] 程式執行完成")

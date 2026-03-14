@@ -1,22 +1,18 @@
 {
-  "date": "2026/03/12",
-  "taiex": -43064,
-  "fut_total": -315848,
-  "opt_taiex": -10347,
-  "opt_total": -10600,
-  "large_5": 4321,
-  "large_10": 3049,
-  "small_ratio": 37.52,
-  "mini_ratio": 29.97,
-  "amplitude_avg": 702.6,
+  "date": "2026/03/13",
+  "taiex": -40347,
+  "fut_total": -324298,
+  "opt_taiex": -10159,
+  "opt_total": -10385,
+  "large_5": 4535,
+  "large_10": 2482,
+  "small_ratio": 33.3,
+  "mini_ratio": 21.84,
+  "amplitude_avg": 694.0,
   "amplitude_min": 321,
   "amplitude_max": 1006,
-  "amplitude_today": 613,
+  "amplitude_today": 855,
   "amplitude_history": [
-    {
-      "date": "2026/2/3",
-      "amplitude": 442
-    },
     {
       "date": "2026/2/4",
       "amplitude": 441
@@ -86,12 +82,16 @@
       "amplitude": 955
     },
     {
-      "date": "2026/3/11",
+      "date": "2026/03/11",
       "amplitude": 908
     },
     {
-      "date": "2026/3/12",
+      "date": "2026/03/12",
       "amplitude": 613
+    },
+    {
+      "date": "2026/03/13",
+      "amplitude": 855
     }
   ]
 }

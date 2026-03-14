@@ -38,6 +38,8 @@ def fetch_daily_amplitude(query_date, commodity_id="TX"):
 
 # 可手動修改的 20 個交易日日期（依時間由舊到新）
 INITIAL_AMPLITUDE_DATES = [
+    "2026/1/30",
+    "2026/2/2",
     "2026/2/3",
     "2026/2/4",
     "2026/2/5",
@@ -55,9 +57,7 @@ INITIAL_AMPLITUDE_DATES = [
     "2026/3/5",
     "2026/3/6",
     "2026/3/9",
-    "2026/3/10",
-    "2026/3/11",
-    "2026/3/12"
+    "2026/3/10"
 ]
 
 DATA_FILE = "daily_open_interest.json"

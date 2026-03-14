@@ -335,7 +335,7 @@
                 "contents": [
                   {
                     "type": "text",
-                    "text": "波動度評估",
+                    "text": "近20日波動度評估",
                     "size": "md",
                     "color": "#555555",
                     "flex": 3
@@ -419,6 +419,9 @@
             ]
           },
           {
+            "type": "separator"
+          },
+          {
             "type": "box",
             "layout": "horizontal",
             "contents": [
@@ -426,14 +429,14 @@
                 "type": "text",
                 "text": "今日振幅",
                 "size": "sm",
-                "color": "#555555",
+                "color": "#000000",
                 "flex": 3
               },
               {
                 "type": "text",
                 "text": "None",
                 "size": "sm",
-                "color": "#111111",
+                "color": "#FF5555",
                 "flex": 2,
                 "align": "end"
               }

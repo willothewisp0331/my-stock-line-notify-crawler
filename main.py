@@ -114,8 +114,8 @@ def generate_flex_message_dict(today_data, yesterday_data):
         bubble_dict['body']['contents'][3]['contents'][16]['contents'][1]['text'] = amp_max
         bubble_dict['body']['contents'][3]['contents'][17]['contents'][1]['text'] = amp_min
         bubble_dict['body']['contents'][3]['contents'][18]['contents'][1]['text'] = amp_avg
-        bubble_dict['body']['contents'][3]['contents'][19]['contents'][1]['text'] = amp_today
-        bubble_dict['body']['contents'][3]['contents'][19]['contents'][1]['color'] = "#00AA00"  if float(amp_today) < float(amp_avg) else "#FF5555"
+        bubble_dict['body']['contents'][3]['contents'][20]['contents'][1]['text'] = amp_today
+        bubble_dict['body']['contents'][3]['contents'][20]['contents'][1]['color'] = "#00AA00"  if float(amp_today) < float(amp_avg) else "#FF5555"
 
         flex_msg = FlexMessage.from_dict({
             "type": "flex",

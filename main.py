@@ -106,15 +106,15 @@ def generate_flex_message_dict(today_data, yesterday_data):
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][1]['text'] = data8
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['text'] = data8_1
         bubble_dict['body']['contents'][3]['contents'][12]['contents'][2]['color'] = "#00AA00"  if float(data8) < float(data8_1) else "#FF5555"
-        # 振幅區（兩欄：名稱、數值）
+        # 振幅區（波動度評估）：contents[16-19] 為最大/最小/平均/今日振幅
         amp_max = str(today_data.get('amplitude_max', '-'))
         amp_min = str(today_data.get('amplitude_min', '-'))
         amp_avg = str(today_data.get('amplitude_avg', '-'))
         amp_today = str(today_data.get('amplitude_today', '-'))
-        bubble_dict['body']['contents'][3]['contents'][14]['contents'][1]['text'] = amp_max
-        bubble_dict['body']['contents'][3]['contents'][15]['contents'][1]['text'] = amp_min
-        bubble_dict['body']['contents'][3]['contents'][16]['contents'][1]['text'] = amp_avg
-        bubble_dict['body']['contents'][3]['contents'][17]['contents'][1]['text'] = amp_today
+        bubble_dict['body']['contents'][3]['contents'][16]['contents'][1]['text'] = amp_max
+        bubble_dict['body']['contents'][3]['contents'][17]['contents'][1]['text'] = amp_min
+        bubble_dict['body']['contents'][3]['contents'][18]['contents'][1]['text'] = amp_avg
+        bubble_dict['body']['contents'][3]['contents'][19]['contents'][1]['text'] = amp_today
 
         flex_msg = FlexMessage.from_dict({
             "type": "flex",

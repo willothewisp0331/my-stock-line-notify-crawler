@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: line-webhook-server
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn webhook_server:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: LINE_SECRET
+        sync: false
+      - key: LINE_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.9.18"

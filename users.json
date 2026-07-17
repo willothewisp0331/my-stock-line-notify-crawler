@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "user_id": "U9a184d711321438ec8d81b8eb38f359d",
+      "display_name": "既有用戶1",
+      "followed_at": "2026-01-01 00:00:00"
+    },
+    {
+      "user_id": "U2e7ddaa0d777d91a3496d7336da8edec",
+      "display_name": "既有用戶2",
+      "followed_at": "2026-01-01 00:00:00"
+    },
+    {
+      "user_id": "Ua60afdfc1ffe298dabb1865a9ad78718",
+      "display_name": "既有用戶3",
+      "followed_at": "2026-01-01 00:00:00"
+    }
+  ]
+}

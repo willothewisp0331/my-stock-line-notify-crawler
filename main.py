@@ -471,8 +471,8 @@ if __name__ == "__main__":
     load_dotenv()
 
     # 取得今天日期
-    # today_str = date.today().strftime('%Y/%m/%d')
-    today_str = "2026/03/13"  # 測試用
+    today_str = date.today().strftime('%Y/%m/%d')
+    # today_str = "2026/07/16"  # 測試用
 
     print(f"[LOG] 開始抓取 {today_str} 的資料...")
 
